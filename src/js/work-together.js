@@ -3,8 +3,6 @@ import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 import sprite from '../img/sprite.svg';
 
-//test
-
 const refs = {
   form: document.querySelector('.js-form'),
   modalBackdrop: document.querySelector('.js-modal-backdrop'),
