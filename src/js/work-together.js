@@ -3,6 +3,8 @@ import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 import sprite from '../img/sprite.svg';
 
+//test
+
 const refs = {
   form: document.querySelector('.js-form'),
   modalBackdrop: document.querySelector('.js-modal-backdrop'),
@@ -16,12 +18,29 @@ const refs = {
 
 refs.form.addEventListener('input', handleFormInput);
 refs.form.addEventListener('submit', handleFormSubmit);
-refs.emailInput.addEventListener('input', handleEmailInput);
+refs.emailInput.addEventListener('blur', handleEmailInput);
 refs.commentInput.addEventListener('input', handleCommentInput);
 refs.commentInput.addEventListener('blur', formatCommentForDisplay);
-refs.commentInput.addEventListener('focus', showFullCommentText);
+refs.commentInput.addEventListener('focus', () => {
+  setTimeout(() => {
+    refs.commentInput.value = fullCommentText;
+  }, 10);
+});
+refs.commentInput.addEventListener('touchstart', () => {
+  refs.commentInput.value = fullCommentText;
+});
 
 window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    requestAnimationFrame(() => {
+      refs.commentInput.validPattern = fullCommentText;
+      formatCommentForDisplay();
+    });
+  }, 0);
+});
+
+window.visualViewport.addEventListener('resize', () => {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(() => {
     refs.commentInput.value = fullCommentText;
@@ -72,7 +91,7 @@ async function handleFormSubmit(e) {
   const email = e.target.elements['user-email'].value.trim();
   const comment = e.target.elements['user-comment'].value.trim();
 
-  if (!email || !comment) {
+  if (!email || !comment || comment.length < minCommentLength) {
     iziToast.error({
       position: 'topRight',
       message: 'Please complete the field',
@@ -299,37 +318,37 @@ function getTextWidth(text, font) {
 }
 
 function formatCommentForDisplay() {
-  const commentInput = refs.commentInput;
+  requestAnimationFrame(() => {
+    const commentInput = refs.commentInput;
+    if (!commentInput || commentInput.offsetWidth === 0) return;
 
-  if (!commentInput) return;
-  if (commentInput.offsetWidth === 0) return;
+    const inputWidth = commentInput.getBoundingClientRect().width;
+    const computedStyle = window.getComputedStyle(commentInput);
 
-  const inputWidth = commentInput.getBoundingClientRect().width;
-  const computedStyle = window.getComputedStyle(commentInput);
+    const fontWeight = computedStyle.fontWeight;
+    const fontSize = computedStyle.fontSize;
+    const fontFamily = computedStyle.fontFamily;
 
-  const fontWeight = computedStyle.fontWeight;
-  const fontSize = computedStyle.fontSize;
-  const fontFamily = computedStyle.fontFamily;
+    const font = `${fontWeight} ${fontSize} ${fontFamily}`;
+    let textWidth = getTextWidth(commentInput.value.trim(), font);
 
-  const font = `${fontWeight} ${fontSize} ${fontFamily}`;
-  let textWidth = getTextWidth(commentInput.value.trim(), font);
+    const inputPadding = 12;
 
-  const inputPadding = 12;
+    if (textWidth > inputWidth - inputPadding) {
+      let truncatedText = refs.commentInput.value.trim();
 
-  if (textWidth > inputWidth - inputPadding) {
-    let truncatedText = refs.commentInput.value.trim();
+      while (
+        getTextWidth(truncatedText + '...', font) > inputWidth - inputPadding &&
+        truncatedText.length > 0
+      ) {
+        truncatedText = truncatedText.slice(0, -1);
+      }
 
-    while (
-      getTextWidth(truncatedText + '...', font) > inputWidth - inputPadding &&
-      truncatedText.length > 0
-    ) {
-      truncatedText = truncatedText.slice(0, -1);
+      refs.commentInput.value = truncatedText + '...';
+    } else {
+      refs.commentInput.value = fullCommentText;
     }
-
-    refs.commentInput.value = truncatedText + '...';
-  } else {
-    refs.commentInput.value = fullCommentText;
-  }
+  });
 }
 
 function showFullCommentText() {
