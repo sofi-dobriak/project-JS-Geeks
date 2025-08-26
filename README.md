@@ -19,7 +19,7 @@
 
 # Other projects by our team:
 
-### Harmoniq — Singe Page Application
+### Harmoniq — Single Page Application
 
 [Demo](https://geeks-frontend-project.vercel.app/) |
 [Github](https://github.com/JokerGared/Geeks-frontend-project)
